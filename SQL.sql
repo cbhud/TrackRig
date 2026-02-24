@@ -221,6 +221,20 @@ FROM view_maintenance_status
 WHERE status != 'OK'
 ORDER BY next_due_date ASC;
 
+-- 1. Ispravka za komponente
+-- Postavljamo serial_number na NOT NULL (pod pretpostavkom da trenutno nemaš NULL vrijednosti u bazi)
+ALTER TABLE component 
+    ALTER COLUMN serial_number SET NOT NULL;
+
+-- 2. Ispravka za radne stanice
+-- Status radne stanice ne bi smio biti nepoznat
+ALTER TABLE workstation 
+    ALTER COLUMN status_id SET NOT NULL;
+
+-- 3. Ispravka za tipove održavanja
+-- Osiguravamo da ne postoje dva tipa sa istim nazivom (npr. "Čišćenje prašine")
+ALTER TABLE maintenance_type 
+    ADD CONSTRAINT uq_maintenance_type_name UNIQUE (name);
 
 
 
