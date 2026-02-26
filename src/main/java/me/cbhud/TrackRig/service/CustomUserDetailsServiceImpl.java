@@ -1,6 +1,7 @@
 package me.cbhud.TrackRig.service;
 
 import me.cbhud.TrackRig.dto.LoginRequest;
+import me.cbhud.TrackRig.exception.DuplicateResourceException;
 import me.cbhud.TrackRig.repository.AppUserRepository;
 import me.cbhud.TrackRig.security.JwtUtil;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -49,7 +50,7 @@ public class CustomUserDetailsServiceImpl implements CustomUserDetailsService {
     @Transactional
     public AppUser registerUser(RegisterRequest request) {
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
-            throw new RuntimeException("Email already taken");
+            throw new DuplicateResourceException("An account with email '" + request.getEmail() + "' already exists.");
         }
 
         AppUser newUser = new AppUser();

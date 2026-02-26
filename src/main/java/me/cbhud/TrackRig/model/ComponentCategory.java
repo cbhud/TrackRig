@@ -1,6 +1,7 @@
 package me.cbhud.TrackRig.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -12,9 +13,9 @@ public class ComponentCategory {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    // FIX: Changed Long to Integer — SQL 'SERIAL' maps to INTEGER, not BIGINT.
     private Integer id;
 
+    @NotBlank(message = "Component category name is required")
     @Column(nullable = false, unique = true)
     private String name;
 

@@ -1,6 +1,9 @@
 package me.cbhud.TrackRig.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -12,20 +15,20 @@ public class MaintenanceType {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    // FIX: Changed Long to Integer — SQL 'SERIAL' maps to INTEGER, not BIGINT.
     private Integer id;
 
-    // FIX: Added @Column(nullable = false) — SQL defines 'name VARCHAR(100) NOT
-    // NULL'
-    // Without this, JPA allows null values that would violate the DB constraint.
-    @Column(nullable = false, length = 100)
+    @NotBlank(message = "Maintenance type name is required")
+    @Size(max = 100, message = "Name must be at most 100 characters")
+    @Column(nullable = false, unique = true, length = 100)
     private String name;
 
     private String description;
 
+    @NotNull(message = "Interval days is required")
     @Column(name = "interval_days")
-    private int intervalDays;
+    private Integer intervalDays;
 
+    @NotNull(message = "isActive flag is required")
     @Column(name = "is_active")
     private Boolean isActive;
 

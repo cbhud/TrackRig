@@ -17,9 +17,6 @@ import java.util.Arrays;
 import java.util.List;
 
 @Configuration
-// Enables @PreAuthorize, @PostAuthorize annotations on service/controller
-// methods.
-// Without this, role-based method security annotations are silently ignored.
 @EnableMethodSecurity
 public class SecurityConfig {
 
@@ -30,8 +27,7 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll() // Allow
-                                                                                                         // preflight
+                        .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
                         .anyRequest().authenticated())
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -44,18 +40,14 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // --------------------------------------------------
-        // FIX 1: Use setAllowedOriginPatterns instead of setAllowedOrigins
-        // This allows credentials (cookies/auth) AND wildcards to work together.
-        // --------------------------------------------------
         configuration.setAllowedOriginPatterns(List.of("*")); // Allow any origin for now (dev mode)
 
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
 
-        // FIX 2: Allow all headers explicitly
+        //Allow all headers explicitly
         configuration.setAllowedHeaders(List.of("*"));
 
-        // FIX 3: Expose headers so your app can read the token if needed
+        //Expose headers so your app can read the token if needed
         configuration.setExposedHeaders(Arrays.asList("Authorization", "Content-Type"));
 
         configuration.setAllowCredentials(true);
