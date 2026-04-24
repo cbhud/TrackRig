@@ -49,6 +49,8 @@ public class WorkstationServiceImpl implements WorkstationService{
         Workstation newWorkstation = new Workstation();
         newWorkstation.setName(workstationRequest.name());
 
+        workstationStatusRepository.findById(1).ifPresent(newWorkstation::setStatus);
+
         Workstation savedWorkstation = workstationRepository.save(newWorkstation);
         return WorkstationResponse.from(savedWorkstation);
     }
