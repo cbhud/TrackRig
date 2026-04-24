@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="img/trackrig-banner.png" alt="TrackRig Banner" width="100%">
+  <img src="img/banner.png" alt="TrackRig Banner" width="100%">
 </p>
 # TrackRig
 
