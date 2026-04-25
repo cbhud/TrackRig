@@ -8,7 +8,7 @@ import me.cbhud.trackRig.dto.response.WorkstationResponse;
 import java.util.List;
 
 public interface WorkstationService {
-    List<WorkstationResponse> getAllWorkstations();
+    List<WorkstationResponse> getAllWorkstations(Integer statusId);
     WorkstationResponse getWorkstationById(Integer id);
     WorkstationResponse createWorkstation(WorkstationRequest workstation);
     void deleteWorkstation(Integer id);

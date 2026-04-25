@@ -8,6 +8,7 @@ import jakarta.validation.Valid;
 import me.cbhud.trackRig.service.WorkstationStatusService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -26,8 +27,9 @@ public class WorkstationController {
     }
 
     @GetMapping()
-    public ResponseEntity<List<WorkstationResponse>> getAllWorkstations() {
-        return ResponseEntity.ok(workstationService.getAllWorkstations());
+    public ResponseEntity<List<WorkstationResponse>> getAllWorkstations(
+            @RequestParam(required = false) Integer statusId) {
+        return ResponseEntity.ok(workstationService.getAllWorkstations(statusId));
     }
 
     @GetMapping("/{id}")
@@ -71,6 +73,7 @@ public class WorkstationController {
     }
 
     @PostMapping("/status")
+    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER')")
     public ResponseEntity<WorkstationStatusResponse> createWorkstationStatus(
             @RequestBody @Valid WorkstationStatusRequest workstation) {
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -78,12 +81,14 @@ public class WorkstationController {
     }
 
     @DeleteMapping("/status/{id}")
+    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER')")
     public ResponseEntity<Void> deleteWorkstationStatus(@PathVariable Integer id) {
         workstationStatusService.deleteWorkstationStatus(id);
         return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/status/{id}")
+    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER')")
     public ResponseEntity<WorkstationStatusResponse> updateWorkstationStatus(@PathVariable Integer id,
             @RequestBody @Valid WorkstationStatusUpdateRequest workstationStatusUpdateRequest) {
         return ResponseEntity.ok(workstationStatusService.updateWorkstationStatus(id, workstationStatusUpdateRequest));

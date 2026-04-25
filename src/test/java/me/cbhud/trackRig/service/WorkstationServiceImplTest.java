@@ -13,6 +13,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -77,5 +78,31 @@ class WorkstationServiceImplTest {
         // When & Then
         assertThrows(RuntimeException.class, () -> workstationService.createWorkstation(request));
         verify(workstationRepository, never()).save(any());
+    }
+
+    @Test
+    void getAllWorkstations_ShouldFilterByStatusWhenStatusIdProvided() {
+        // Given
+        WorkstationStatus filteredStatus = new WorkstationStatus();
+        filteredStatus.setId(4);
+        filteredStatus.setName("status2");
+
+        Workstation workstation = new Workstation();
+        workstation.setId(1);
+        workstation.setName("WS-01");
+        workstation.setStatus(filteredStatus);
+
+        when(workstationRepository.findAllByStatus_Id(4)).thenReturn(List.of(workstation));
+
+        // When
+        List<WorkstationResponse> response = workstationService.getAllWorkstations(4);
+
+        // Then
+        assertEquals(1, response.size());
+        assertEquals("WS-01", response.get(0).name());
+        assertNotNull(response.get(0).status());
+        assertEquals(4, response.get(0).status().id());
+        verify(workstationRepository).findAllByStatus_Id(4);
+        verify(workstationRepository, never()).findAll();
     }
 }

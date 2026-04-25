@@ -12,6 +12,15 @@ CREATE TABLE app_user (
 CREATE UNIQUE INDEX uq_app_user_email_lower
 ON app_user (LOWER(email));
 
+select * from APP_USER;
+
+select * from workstation;
+select * from workstation_status ws;
+
+select * from component_assignment_log cal;
+
+
+
 
 -- =========================================
 -- 2. WORKSTATION MANAGEMENT
@@ -85,6 +94,12 @@ CREATE TABLE component_assignment_log (
     CONSTRAINT chk_assignment_dates
         CHECK (removed_at IS NULL OR removed_at >= assigned_at)
 );
+truncate workstation, component, component_assignment_log, maintenance_log;
+
+
+truncate app_user, component_assignment_log, maintenance_log;
+
+select * from app_user;
 
 -- Only one active assignment record per component
 CREATE UNIQUE INDEX uq_component_assignment_log_active
@@ -208,3 +223,153 @@ ON maintenance_log(performed_by_user_id);
 
 CREATE INDEX idx_maintenance_log_performed_at
 ON maintenance_log(performed_at);
+
+
+
+
+
+
+
+
+
+
+
+
+-- =================================================================================
+-- TrackRig Seed Data Script
+-- Includes:
+-- - 3 Workstation Statuses
+-- - 3 Component Statuses
+-- - 3 Component Categories
+-- - 2 Maintenance Types
+-- - 5 Workstations
+-- - 5 Components
+-- - Maintenance Logs to simulate OK, DUE_SOON, OVERDUE, and NEVER_DONE statuses
+-- =================================================================================
+
+-- NOTE: If you are running this in a database that already has data, 
+-- uncomment the following line to clear existing data and reset auto-increment IDs.
+-- TRUNCATE TABLE maintenance_log, component, workstation, workstation_status, component_status, component_category, maintenance_type RESTART IDENTITY CASCADE;
+
+-- 1. Insert Workstation Statuses (3 entries)
+INSERT INTO workstation_status (name, color) VALUES 
+('Active', '#28a745'),
+('Inactive', '#dc3545'),
+('Under Maintenance', '#ffc107');
+
+-- 2. Insert Component Categories (3 entries)
+INSERT INTO component_category (name, description) VALUES 
+('Computer', 'Desktop PCs and mini PCs'),
+('Peripheral', 'Keyboards, mice, and other accessories');
+
+-- 3. Insert Component Statuses (3 entries)
+INSERT INTO component_status (name) VALUES 
+('Broken'),
+('In Storage');
+
+-- 4. Insert Maintenance Types (Required to demonstrate due/overdue statuses)
+INSERT INTO maintenance_type (name, description, interval_days, is_active) VALUES 
+('Weekly Cleaning', 'General cleaning of the workstation', 7, TRUE),
+('Monthly Calibration', 'Hardware calibration and testing', 30, TRUE);
+
+-- 5. Insert Workstations (5 entries)
+-- Using subqueries ensures we grab the correct IDs even if they don't start at 1
+INSERT INTO workstation (name, status_id, grid_x, grid_y, floor) VALUES 
+('WS-Alpha', (SELECT id FROM workstation_status WHERE name = 'Active'), 1, 1, 1),
+('WS-Beta', (SELECT id FROM workstation_status WHERE name = 'Active'), 2, 1, 1),
+('WS-Gamma', (SELECT id FROM workstation_status WHERE name = 'Inactive'), 1, 2, 1),
+('WS-Delta', (SELECT id FROM workstation_status WHERE name = 'Under Maintenance'), 2, 2, 1),
+('WS-Epsilon', (SELECT id FROM workstation_status WHERE name = 'Active'), 3, 1, 1);
+
+-- 6. Insert Components (5 entries)
+INSERT INTO component (serial_number, name, notes, category_id, status_id, workstation_id) VALUES 
+('SN-MON-001', 'Dell UltraSharp 27', 'Primary monitor', 
+    (SELECT id FROM component_category WHERE name = 'Monitor'), 
+    (SELECT id FROM component_status WHERE name = 'Operational'), 
+    (SELECT id FROM workstation WHERE name = 'WS-Alpha')),
+
+('SN-PC-001', 'OptiPlex 7090', 'Main processing unit', 
+    (SELECT id FROM component_category WHERE name = 'Computer'), 
+    (SELECT id FROM component_status WHERE name = 'Operational'), 
+    (SELECT id FROM workstation WHERE name = 'WS-Alpha')),
+
+('SN-PER-001', 'Logitech MX Master', 'Mouse for Beta', 
+    (SELECT id FROM component_category WHERE name = 'Peripheral'), 
+    (SELECT id FROM component_status WHERE name = 'Operational'), 
+    (SELECT id FROM workstation WHERE name = 'WS-Beta')),
+
+('SN-MON-002', 'BenQ Designer 27', 'Flickering issue', 
+    (SELECT id FROM component_category WHERE name = 'Monitor'), 
+    (SELECT id FROM component_status WHERE name = 'Broken'), 
+    (SELECT id FROM workstation WHERE name = 'WS-Gamma')),
+
+('SN-PC-002', 'OptiPlex 7090', 'Spare unit', 
+    (SELECT id FROM component_category WHERE name = 'Computer'), 
+    (SELECT id FROM component_status WHERE name = 'In Storage'), 
+    NULL);
+
+-- 7. Insert Maintenance Logs to simulate statuses (OK, DUE_SOON, OVERDUE, NEVER_DONE)
+-- WS-Alpha: OK (Cleaning performed 1 day ago)
+INSERT INTO maintenance_log (workstation_id, maintenance_type_id, performed_at, notes) 
+VALUES (
+    (SELECT id FROM workstation WHERE name = 'WS-Alpha'), 
+    (SELECT id FROM maintenance_type WHERE name = 'Weekly Cleaning'), 
+    now() - INTERVAL '1 day', 'Routine cleaning'
+);
+
+-- WS-Beta: DUE_SOON (Cleaning performed 6 days ago, interval is 7 days, so due in 1 day)
+INSERT INTO maintenance_log (workstation_id, maintenance_type_id, performed_at, notes) 
+VALUES (
+    (SELECT id FROM workstation WHERE name = 'WS-Beta'), 
+    (SELECT id FROM maintenance_type WHERE name = 'Weekly Cleaning'), 
+    now() - INTERVAL '6 days', 'Last cleaning was a bit rushed'
+);
+
+-- WS-Gamma: OVERDUE (Calibration performed 40 days ago, interval is 30 days, so 10 days late)
+INSERT INTO maintenance_log (workstation_id, maintenance_type_id, performed_at, notes) 
+VALUES (
+    (SELECT id FROM workstation WHERE name = 'WS-Gamma'), 
+    (SELECT id FROM maintenance_type WHERE name = 'Monthly Calibration'), 
+    now() - INTERVAL '40 days', 'Needs recalibration'
+);
+
+-- WS-Delta: NEVER_DONE
+-- (We intentionally skip inserting a log for WS-Delta so it shows up as NEVER_DONE in the view)
+
+-- WS-Epsilon: DUE_SOON (Calibration performed 28 days ago, interval is 30 days, due in 2 days)
+INSERT INTO maintenance_log (workstation_id, maintenance_type_id, performed_at, notes) 
+VALUES (
+    (SELECT id FROM workstation WHERE name = 'WS-Epsilon'), 
+    (SELECT id FROM maintenance_type WHERE name = 'Monthly Calibration'), 
+    now() - INTERVAL '28 days', 'Upcoming calibration needed'
+);
+
+
+
+
+INSERT INTO maintenance_log (workstation_id, maintenance_type_id, performed_at, notes) 
+VALUES (
+    (SELECT id FROM workstation WHERE name = 'WS-Delta'), 
+    (SELECT id FROM maintenance_type WHERE name = 'Monthly Calibration'), 
+    now() - INTERVAL '29 days', 'Almost due for calibration'
+);
+
+select * from app_user;
+
+-- WS-Delta: OVERDUE for Cleaning (Performed 14 days ago, interval 7 days)
+INSERT INTO maintenance_log (workstation_id, maintenance_type_id, performed_at, notes) 
+VALUES (
+    (SELECT id FROM workstation WHERE name = 'WS-Delta'), 
+    (SELECT id FROM maintenance_type WHERE name = 'Weekly Cleaning'), 
+    now() - INTERVAL '14 days', 'Cleaning neglected during maintenance'
+);
+
+-- WS-Epsilon: OVERDUE for Cleaning (Performed 12 days ago, interval 7 days)
+INSERT INTO maintenance_log (workstation_id, maintenance_type_id, performed_at, notes) 
+VALUES (
+    (SELECT id FROM workstation WHERE name = 'WS-Epsilon'), 
+    (SELECT id FROM maintenance_type WHERE name = 'Weekly Cleaning'), 
+    now() - INTERVAL '12 days', 'Overdue for weekly cleaning'
+);
+
+

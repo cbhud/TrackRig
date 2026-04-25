@@ -30,8 +30,12 @@ public class WorkstationServiceImpl implements WorkstationService{
     }
 
     @Override
-    public List<WorkstationResponse> getAllWorkstations() {
-        return workstationRepository.findAll()
+    public List<WorkstationResponse> getAllWorkstations(Integer statusId) {
+        List<Workstation> workstations = statusId == null
+                ? workstationRepository.findAll()
+                : workstationRepository.findAllByStatus_Id(statusId);
+
+        return workstations
                 .stream()
                 .map(WorkstationResponse::from)
                 .toList();

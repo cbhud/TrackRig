@@ -10,6 +10,7 @@ import me.cbhud.trackRig.service.ComponentService;
 import me.cbhud.trackRig.service.ComponentStatusService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -98,6 +99,7 @@ public class ComponentController {
     }
 
     @PostMapping("/categories")
+    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER')")
     public ResponseEntity<ComponentCategoryResponse> createCategory(
             @RequestBody @Valid ComponentCategoryRequest componentCategoryRequest) {
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -105,12 +107,14 @@ public class ComponentController {
     }
 
     @DeleteMapping("/categories/{id}")
+    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER')")
     public ResponseEntity<Void> deleteComponentCategory(@PathVariable Integer id) {
         componentCategoryService.deleteComponentCategory(id);
         return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/categories/{id}")
+    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER')")
     public ResponseEntity<ComponentCategoryResponse> updateComponentCategory(
             @PathVariable Integer id,
             @RequestBody @Valid ComponentCategoryUpdateRequest componentCategoryUpdateRequest) {
@@ -130,6 +134,7 @@ public class ComponentController {
     }
 
     @PostMapping("/status")
+    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER')")
     public ResponseEntity<ComponentStatusResponse> createComponentStatus(
             @RequestBody @Valid ComponentStatusRequest componentStatusRequest) {
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -137,12 +142,14 @@ public class ComponentController {
     }
 
     @DeleteMapping("/status/{id}")
+    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER')")
     public ResponseEntity<Void> deleteComponentStatus(@PathVariable Integer id) {
         componentStatusService.deleteComponentStatus(id);
         return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/status/{id}")
+    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER')")
     public ResponseEntity<ComponentStatusResponse> updateComponentStatus(
             @PathVariable Integer id,
             @RequestBody @Valid ComponentStatusRequest componentStatusRequest) {

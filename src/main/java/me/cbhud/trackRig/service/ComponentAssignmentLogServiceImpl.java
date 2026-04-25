@@ -88,6 +88,9 @@ public class ComponentAssignmentLogServiceImpl implements ComponentAssignmentLog
                 .ifPresent(existing -> {
                     existing.setRemovedAt(OffsetDateTime.now());
                     logRepository.save(existing);
+                    // Flush the close before inserting the replacement row so the partial
+                    // unique index on active assignments is satisfied.
+                    logRepository.flush();
                 });
 
         Workstation workstation = null;
@@ -98,6 +101,9 @@ public class ComponentAssignmentLogServiceImpl implements ComponentAssignmentLog
 
         AppUser assignedBy = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        component.setWorkstation(workstation);
+        componentRepository.save(component);
 
         ComponentAssignmentLog log = new ComponentAssignmentLog();
         log.setComponent(component);
@@ -114,6 +120,10 @@ public class ComponentAssignmentLogServiceImpl implements ComponentAssignmentLog
         ComponentAssignmentLog log = logRepository
                 .findByComponentIdAndRemovedAtIsNull(componentId)
                 .orElseThrow(() -> new ResourceNotFoundException("No active assignment for this component"));
+
+        Component component = log.getComponent();
+        component.setWorkstation(null);
+        componentRepository.save(component);
 
         log.setRemovedAt(OffsetDateTime.now());
         if (notes != null) {

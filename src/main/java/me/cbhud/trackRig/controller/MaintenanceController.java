@@ -12,6 +12,7 @@ import me.cbhud.trackRig.service.MaintenanceLogService;
 import me.cbhud.trackRig.service.MaintenanceTypeService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -47,12 +48,14 @@ public class MaintenanceController {
     }
 
     @PostMapping("/types")
+    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER')")
     public ResponseEntity<MaintenanceTypeResponse> createType(
             @RequestBody @Valid MaintenanceTypeRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(typeService.createMaintenanceType(request));
     }
 
     @PatchMapping("/types/{id}")
+    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER')")
     public ResponseEntity<MaintenanceTypeResponse> updateType(
             @PathVariable Integer id,
             @RequestBody @Valid MaintenanceTypeUpdateRequest request) {
@@ -60,6 +63,7 @@ public class MaintenanceController {
     }
 
     @DeleteMapping("/types/{id}")
+    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER')")
     public ResponseEntity<Void> deleteType(@PathVariable Integer id) {
         typeService.deleteMaintenanceType(id);
         return ResponseEntity.noContent().build();
